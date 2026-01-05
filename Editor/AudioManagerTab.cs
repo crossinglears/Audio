@@ -2,25 +2,28 @@ using CrossingLearsEditor;
 using UnityEditor;
 using UnityEngine;
 
-public class AudioManagerTab : CL_WindowTab
+namespace CrossingLears.Audio
 {
-    public override string TabName => "Audio";
-
-    public override void DrawContent()
+    public class AudioManagerTab : CL_WindowTab
     {
-        if (GUILayout.Button("Spawn AudioManager", GUILayout.Height(30)))
+        public override string TabName => "Audio";
+
+        public override void DrawContent()
         {
-            if (!Object.FindAnyObjectByType<AudioManager>(FindObjectsInactive.Include))
+            if (GUILayout.Button("Spawn AudioManager", GUILayout.Height(30)))
             {
-                string path = "Assets/Crossing Lears/Audio/Runtime/AudioManager.prefab";
-                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab != null)
+                if (!Object.FindAnyObjectByType<CrossingLears.Audio.AudioManager>(FindObjectsInactive.Include))
                 {
-                    PrefabUtility.InstantiatePrefab(prefab);
-                }
-                else
-                {
-                    Debug.LogError("AudioManager prefab not found at: " + path);
+                    string path = "Assets/Crossing Lears/Audio/Runtime/AudioManager.prefab";
+                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                    if (prefab != null)
+                    {
+                        PrefabUtility.InstantiatePrefab(prefab);
+                    }
+                    else
+                    {
+                        Debug.LogError("AudioManager prefab not found at: " + path);
+                    }
                 }
             }
         }
