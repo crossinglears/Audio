@@ -22,6 +22,7 @@ namespace CrossingLears.Audio
             }
             else
             {
+                Instance.ActiveListener = FindAnyObjectByType<AudioListener>(FindObjectsInactive.Include);
                 Destroy(gameObject);
             }
         }
