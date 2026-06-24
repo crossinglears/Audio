@@ -1,18 +1,45 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace CrossingLears.Audio
 {
+    /// <summary>
+    /// Manages playback of music, sound effects (SFX), and UI audio in the game.
+    /// Supports pooling of sound effect sources and fading transitions for music.
+    /// </summary>
     public class AudioManager : MonoBehaviour
     {
+        /// <summary>
+        /// Singleton instance of the AudioManager.
+        /// </summary>
         public static AudioManager Instance;
 
-        [SerializeField] AudioSource sfxAudioSourcePrefab;
+        [Header("SFX Settings")]
+        [Tooltip("Prefab for the AudioSource used to play 3D SFX clips.")]
+        [SerializeField] private AudioSource sfxAudioSourcePrefab;
 
-        Dictionary<AudioClip, List<AudioSource>> sfxPool = new Dictionary<AudioClip, List<AudioSource>>();
+        [Header("Music Settings")]
+        [Tooltip("AudioSource used to play the active music track.")]
+        public AudioSource MusicAudioSource;
 
-        void Awake()
+        [Tooltip("Fading speed when transitioning music out (multiplier).")]
+        [Range(0.02f, 2f)] public float FadeOutSpeed = 1f;
+
+        [Tooltip("Fading speed when transitioning music in (multiplier).")]
+        [Range(0.02f, 2f)] public float FadeInSpeed = 1f;
+
+        [Tooltip("The delay offset ratio (0 to 1) of the fade out duration before the new track starts fading in.")]
+        [Range(0f, 1f)] public float MusicFadeOffset = 0.7f;
+
+        /// <summary>
+        /// The active AudioListener in the scene, used to position UI/2D sounds.
+        /// </summary>
+        [HideInInspector] public AudioListener ActiveListener;
+
+        private readonly Dictionary<AudioClip, List<AudioSource>> sfxPool = new Dictionary<AudioClip, List<AudioSource>>();
+
+        private void Awake()
         {
             if (Instance == null)
             {
@@ -27,77 +54,48 @@ namespace CrossingLears.Audio
             }
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             sfxPool.Clear();
         }
 
-        public static void PlayMusic(AudioClip clip, float volume = 1f, bool looping = true)
+        /// <summary>
+        /// Plays a music track, fading out the current track and fading in the new one.
+        /// </summary>
+        /// <param name="clip">The music clip to play.</param>
+        /// <param name="volume">The target volume for the music track.</param>
+        /// <param name="looping">Whether the music track should loop.</param>
+        public static void ChangeBackgroundMusic(AudioClip clip, float volume = 1f, bool looping = true)
         {
+            if (Instance == null)
+            {
+                Debug.LogWarning("[AudioManager] Cannot play music because Instance is null.");
+                return;
+            }
             Instance.StartCoroutine(Instance.FadeRoutine(clip, volume, looping));
         }
-    [Range(0.02f, 2)] public float FadeOutSpeed = 1f;
-    [Range(0.02f, 2)]public float FadeInSpeed = 1f;
-    public AudioSource MusicAudioSource;
-    [Range(0, 1)] public float MusicFadeOffset = 0.7f;
 
-        IEnumerator FadeRoutine(AudioClip clip, float volume, bool looping)
-    {
-        AudioSource oldSource = MusicAudioSource;
-
-        // New AudioSource
-        AudioSource newSource = Instantiate(MusicAudioSource, transform).GetComponent<AudioSource>();
-            newSource.gameObject.name = clip.name;
-        newSource.clip = clip;
-        newSource.loop = looping;
-        newSource.volume = 0f;
-        newSource.outputAudioMixerGroup = oldSource.outputAudioMixerGroup;
-        newSource.Play();
-
-        float fadeOutDuration = 1f / FadeOutSpeed;
-        float fadeInDuration = 1f / FadeInSpeed;
-        float oldStartVol = oldSource.volume;
-
-        // Start fade out immediately
-        StartCoroutine(FadeOutRoutine(oldSource, fadeOutDuration, oldStartVol));
-
-        // Start fade in after offset delay
-        float delay = fadeOutDuration * MusicFadeOffset;
-        yield return new WaitForSecondsRealtime(delay);
-        yield return StartCoroutine(FadeInRoutine(newSource, volume, fadeInDuration));
-
-        MusicAudioSource = newSource;
-    }
-
-        IEnumerator FadeOutRoutine(AudioSource source, float duration, float startVol)
-        {
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                source.volume = Mathf.Lerp(startVol, 0f, t);
-                yield return null;
-            }
-            source.volume = 0f;
-            Destroy(source.gameObject);
-        }
-
-        IEnumerator FadeInRoutine(AudioSource source, float targetVolume, float duration)
-        {
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                source.volume = Mathf.Lerp(0f, targetVolume, t);
-                yield return null;
-            }
-            source.volume = targetVolume;
-        }
-
+        /// <summary>
+        /// Plays a sound effect at a specific 3D position, using pooling to optimize performance.
+        /// Applies slight randomized pitch and volume variations.
+        /// </summary>
+        /// <param name="clip">The sound effect clip to play.</param>
+        /// <param name="position">The 3D position in the world to play the sound at.</param>
+        /// <param name="volume">The target volume for the sound effect.</param>
         public static void PlaySFX(AudioClip clip, Vector3 position, float volume = 1f)
         {
+            if (Instance == null)
+            {
+                Debug.LogWarning("[AudioManager] Cannot play SFX because Instance is null.");
+                return;
+            }
+
+            if (clip == null)
+            {
+                Debug.LogWarning("[AudioManager] SFX clip is null.");
+                return;
+            }
+
             List<AudioSource> sources;
             if (!Instance.sfxPool.TryGetValue(clip, out sources))
             {
@@ -108,7 +106,7 @@ namespace CrossingLears.Audio
             AudioSource source = null;
             for (int i = 0; i < sources.Count; i++)
             {
-                if (!sources[i].isPlaying)
+                if (sources[i] != null && !sources[i].isPlaying)
                 {
                     source = sources[i];
                     break;
@@ -117,6 +115,11 @@ namespace CrossingLears.Audio
 
             if (source == null)
             {
+                if (Instance.sfxAudioSourcePrefab == null)
+                {
+                    Debug.LogError("[AudioManager] sfxAudioSourcePrefab is not assigned in the inspector!");
+                    return;
+                }
                 source = Instantiate(Instance.sfxAudioSourcePrefab, Instance.transform);
                 sources.Add(source);
             }
@@ -137,16 +140,104 @@ namespace CrossingLears.Audio
             }
         }
 
-        public AudioListener ActiveListener;
+        /// <summary>
+        /// Plays a UI/2D sound effect at the position of the active AudioListener.
+        /// </summary>
+        /// <param name="clip">The sound effect clip to play.</param>
+        /// <param name="volume">The target volume for the sound effect.</param>
         public static void PlayUI(AudioClip clip, float volume = 1f)
         {
-            PlaySFX(clip, Instance.ActiveListener.transform.position, volume);
+            if (Instance == null)
+            {
+                Debug.LogWarning("[AudioManager] Cannot play UI sound because Instance is null.");
+                return;
+            }
+
+            if (Instance.ActiveListener == null)
+            {
+                Instance.ActiveListener = FindAnyObjectByType<AudioListener>(FindObjectsInactive.Include);
+            }
+
+            Vector3 position = Instance.ActiveListener != null
+                ? Instance.ActiveListener.transform.position
+                : Vector3.zero;
+
+            PlaySFX(clip, position, volume);
         }
 
-        static IEnumerator DelayedPlay(AudioSource source, float delay)
+        private IEnumerator FadeRoutine(AudioClip clip, float volume, bool looping)
+        {
+            AudioSource oldSource = MusicAudioSource;
+
+            // New AudioSource
+            AudioSource newSource = Instantiate(MusicAudioSource, transform).GetComponent<AudioSource>();
+            newSource.gameObject.name = clip.name;
+            newSource.clip = clip;
+            newSource.loop = looping;
+            newSource.volume = 0f;
+            newSource.outputAudioMixerGroup = oldSource != null ? oldSource.outputAudioMixerGroup : null;
+            newSource.Play();
+
+            float fadeOutDuration = 1f / FadeOutSpeed;
+            float fadeInDuration = 1f / FadeInSpeed;
+            float oldStartVol = oldSource != null ? oldSource.volume : 0f;
+
+            if (oldSource != null)
+            {
+                // Start fade out immediately
+                StartCoroutine(FadeOutRoutine(oldSource, fadeOutDuration, oldStartVol));
+            }
+
+            // Start fade in after offset delay
+            float delay = fadeOutDuration * MusicFadeOffset;
+            yield return new WaitForSecondsRealtime(delay);
+            yield return StartCoroutine(FadeInRoutine(newSource, volume, fadeInDuration));
+
+            MusicAudioSource = newSource;
+        }
+
+        private IEnumerator FadeOutRoutine(AudioSource source, float duration, float startVol)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (source == null) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                source.volume = Mathf.Lerp(startVol, 0f, t);
+                yield return null;
+            }
+            if (source != null)
+            {
+                source.volume = 0f;
+                Destroy(source.gameObject);
+            }
+        }
+
+        private IEnumerator FadeInRoutine(AudioSource source, float targetVolume, float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (source == null) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                source.volume = Mathf.Lerp(0f, targetVolume, t);
+                yield return null;
+            }
+            if (source != null)
+            {
+                source.volume = targetVolume;
+            }
+        }
+
+        private static IEnumerator DelayedPlay(AudioSource source, float delay)
         {
             yield return new WaitForSeconds(delay);
-            source.Play();
+            if (source != null)
+            {
+                source.Play();
+            }
         }
     }
 }

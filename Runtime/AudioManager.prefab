@@ -139,7 +139,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3764161732083383906}
   - component: {fileID: 5303393912726101894}
-  - component: {fileID: 7973875309256006402}
+  - component: {fileID: -1272654721111795244}
   m_Layer: 0
   m_Name: AudioManager
   m_TagString: Untagged
@@ -182,7 +182,7 @@ MonoBehaviour:
   MusicAudioSource: {fileID: 5223337584895345974}
   MusicFadeOffset: 0.7
   ActiveListener: {fileID: 0}
---- !u!114 &7973875309256006402
+--- !u!114 &-1272654721111795244
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -191,18 +191,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 6822475300999638251}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba24f48a35cb62948b2d0bdd78616963, type: 3}
+  m_Script: {fileID: 11500000, guid: 12621ad69383c7647a190cf417467ae3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  MusicVolume: 0.5
-  SoundVolume: 1
-  MusicIndex: 0
-  MusicClip:
-  - {fileID: 8300000, guid: 27c00c770ee3b9d4ca50eecca2df22a6, type: 3}
-  - {fileID: 8300000, guid: 540dfafbd9b2c284182438f0f4116877, type: 3}
-  SoundSource: {fileID: 6822475300999638251}
-  SoundEffectClip: {fileID: 8300000, guid: e08393bac2e1ab0479eb04d02a9448af, type: 3}
-  UIClip: {fileID: 8300000, guid: e08393bac2e1ab0479eb04d02a9448af, type: 3}
+  m_EditorClassIdentifier: CL_Audio::CrossingLears.Audio.AudioLibrary
 --- !u!1 &7594910995802267605
 GameObject:
   m_ObjectHideFlags: 0

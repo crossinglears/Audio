@@ -26,7 +26,7 @@ public class AudioTest : MonoBehaviour
         {
             MusicIndex = 0;
         }
-        AudioManager.PlayMusic(MusicClip[MusicIndex], MusicVolume);
+        AudioManager.ChangeBackgroundMusic(MusicClip[MusicIndex], MusicVolume);
     }
 
     [CrossingLears.Button]
@@ -38,5 +38,34 @@ public class AudioTest : MonoBehaviour
     public void PlayUI()
     {
         AudioManager.PlayUI(SoundEffectClip, SoundVolume);
+    }
+
+    [Header("Library Tests (by Name)")]
+    public string TestClipName;
+
+    [CrossingLears.Button]
+    public void LibraryPlayUI()
+    {
+        if (AudioLibrary.Instance != null)
+        {
+            AudioLibrary.Instance.PlayUI(TestClipName, SoundVolume);
+        }
+        else
+        {
+            Debug.LogError("AudioLibrary.Instance is null!");
+        }
+    }
+
+    [CrossingLears.Button]
+    public void LibraryPlaySFX()
+    {
+        if (AudioLibrary.Instance != null)
+        {
+            AudioLibrary.Instance.PlaySFX(TestClipName, SoundSource.transform.position, SoundVolume);
+        }
+        else
+        {
+            Debug.LogError("AudioLibrary.Instance is null!");
+        }
     }
 }
