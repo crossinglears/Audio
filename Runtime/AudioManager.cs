@@ -17,7 +17,7 @@ namespace CrossingLears.Audio
 
         [Header("SFX Settings")]
         [Tooltip("Prefab for the AudioSource used to play 3D SFX clips.")]
-        [SerializeField] private AudioSource sfxAudioSourcePrefab;
+        public AudioSource sfxAudioSourcePrefab;
 
         [Header("Music Settings")]
         [Tooltip("AudioSource used to play the active music track.")]
