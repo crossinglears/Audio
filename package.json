@@ -1,0 +1,13 @@
+{
+  "name": "com.crossinglears.audio",
+  "displayName": "Crossing Lears Audio",
+  "version": "0.0.1",
+  "unity": "6000.0",
+  "description": "Simple Audio Manager",
+  "dependencies": {},
+
+  "author": {
+    "name": "Crossing Lears",
+    "email": "main@crossinglears.com"
+  }
+}

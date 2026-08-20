@@ -1,0 +1,16 @@
+{
+    "name": "CL_Audio",
+    "rootNamespace": "CrossingLears.Audio",
+    "references": [
+        "GUID:b5b95d56ce8ae8a4d86d5517a33f4f18"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
